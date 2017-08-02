@@ -1,6 +1,10 @@
 package touhou;
 
 import tklibs.SpriteUtils;
+import touhou.bases.Constraints;
+import touhou.players.PlayerSpell;
+import touhou.players.Players;
+import touhou.inputs.InputManager;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -8,8 +12,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-
-import static java.awt.event.KeyEvent.*;
+import java.util.ArrayList;
 
 /**
  * Created by huynq on 7/29/17.
@@ -24,31 +27,31 @@ public class GameWindow extends Frame {
     private Graphics2D backbufferGraphics;
 
     private BufferedImage background;
-    private BufferedImage player;
+    private BufferedImage spells;
 
-    private int playerX = 384 / 2;
-    private int playerY = 600;
+    private int backgroundY = 768-3109;
 
-    private boolean rightPressed;
-    private boolean leftPressed;
-    private boolean upPressed;
-    private boolean downPressed;
-
-    final int PLAYER_SPEED = 5;
+    Players player = new Players();
+    ArrayList<PlayerSpell> playerSpells = new ArrayList<>();
+    InputManager inputManager = new InputManager();
 
     public GameWindow() {
         background = SpriteUtils.loadImage("assets/images/background/0.png");
-        player = SpriteUtils.loadImage("assets/images/players/straight/0.png");
+        spells = SpriteUtils.loadImage("assets/images/player-spells/a/0.png");
+        player.inputManager = this.inputManager;
+        player.constraints = new Constraints(0, 768, 0, 370);
+        player.playerSpells = this.playerSpells();
         setupGameLoop();
         setupWindow();
     }
+
 
     private void setupGameLoop() {
         lastTimeUpdate = -1;
     }
 
     private void setupWindow() {
-        this.setSize(1024, 768);
+        this.setSize(384, 768);
 
         this.setTitle("Touhou - Remade by QHuyDTVT");
         this.setVisible(true);
@@ -72,38 +75,12 @@ public class GameWindow extends Frame {
 
             @Override
             public void keyPressed(KeyEvent e) {
-                switch (e.getKeyCode()) {
-                    case VK_RIGHT:
-                        rightPressed = true;
-                        break;
-                    case VK_LEFT:
-                        leftPressed = true;
-                        break;
-                    case VK_UP:
-                        upPressed = true;
-                        break;
-                    case VK_DOWN:
-                        downPressed = true;
-                        break;
-                }
+                inputManager.keyPressed(e);
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
-                switch (e.getKeyCode()) {
-                    case VK_RIGHT:
-                        rightPressed = false;
-                        break;
-                    case VK_LEFT:
-                        leftPressed = false;
-                        break;
-                    case VK_UP:
-                        upPressed = false;
-                        break;
-                    case VK_DOWN:
-                        downPressed = false;
-                        break;
-                }
+                inputManager.keyReleased(e);
             }
         });
     }
@@ -123,29 +100,19 @@ public class GameWindow extends Frame {
     }
 
     private void run() {
-        if (rightPressed) {
-            playerX += PLAYER_SPEED;
-        }
-
-        if (leftPressed) {
-            playerX -= PLAYER_SPEED;
-        }
-
-        if (downPressed) {
-            playerY += PLAYER_SPEED;
-        }
-
-        if(upPressed) {
-            playerY -= PLAYER_SPEED;
-        }
-
+        player.run();
     }
 
     private void render() {
         backbufferGraphics.setColor(Color.black);
-        backbufferGraphics.fillRect(0, 0, 1024, 768);
-        backbufferGraphics.drawImage(background, 0, 0, null);
-        backbufferGraphics.drawImage(player, playerX, playerY, null);
+        backbufferGraphics.fillRect(0, 0, 384, 768);
+        backbufferGraphics.drawImage(background, 0, backgroundY, null);
+        backgroundY += 1;
+        player.render(backbufferGraphics);
+
+        for (PlayerSpell playerSpell: playerSpells){
+            //playerSpell.render(...);
+        }
 
         windowGraphics.drawImage(backbufferImage, 0, 0, null);
     }
